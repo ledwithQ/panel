@@ -785,8 +785,9 @@ class _state(param.Parameterized):
         overridden with the `at` keyword argument. The scheduling may
         be declared using the `period` argument or a cron expression
         (which requires the `croniter` library). Note that the `at`
-        time should be in local time but if a callable is provided it
-        must return a UTC time.
+        time should be in local time when specifying `period` and any
+        timezone aware datetime when using cron. If a callable is 
+        provided it must return a UTC time.
 
         Note that the scheduled callback must not be defined within a
         script served using `panel serve` because the script and all
@@ -811,7 +812,8 @@ class _state(param.Parameterized):
           datetime or an Iterator of datetimes in the local timezone
           declaring when to execute the task. Alternatively may also
           declare a callable which is given the current UTC time and
-          must return a datetime also in UTC.
+          must return a datetime also in UTC. When using cron, only a
+          datetime.datetime is accepted and it should be timezeon aware.
         period: str or datetime.timedelta
           The period between executions, may be expressed as a
           timedelta or a string:
@@ -870,7 +872,7 @@ class _state(param.Parameterized):
             diter = dgen()
         else:
             from croniter import croniter
-            base = dt.datetime.now() if at is None else at
+            base = dt.datetime.now(tz=dt.timezone.utc) if at is None else at
             diter = croniter(cron, base)
         now = dt.datetime.now().timestamp()
         try:
